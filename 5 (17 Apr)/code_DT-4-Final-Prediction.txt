@@ -1,0 +1,109 @@
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn import tree
+import plotly.graph_objects as go
+import math
+
+# Ganti 'nama_file.csv' dengan nama file CSV Anda
+file_path = 'dataset-3.csv'
+
+# Membaca dataset dari file CSV
+df = pd.read_csv(file_path)
+
+# Menampilkan dataset
+print("Dataset:")
+print(df)
+print("\n")
+
+# Hitung entropi untuk Berat berdasarkan Usia dan Kelamin
+def calculate_entropy(column_name):
+    unique_values = df[column_name].unique()
+    total_samples = len(df)
+    entropy = 0
+
+    for value in unique_values:
+        subset = df[df[column_name] == value]
+        count_yes = subset['Hipertensi'].value_counts().get('ya', 0)
+        count_no = len(subset) - count_yes
+        p_yes = count_yes / len(subset)
+        p_no = count_no / len(subset)
+
+        entropy += len(subset) / total_samples * (-p_yes * math.log2(p_yes) - p_no * math.log2(p_no) if p_yes != 0 and p_no != 0 else 0)
+
+    return entropy
+
+# Hitung entropi untuk kolom Usia, Kelamin, dan Berat
+entropy_usia = calculate_entropy('Usia')
+entropy_kelamin = calculate_entropy('Kelamin')
+entropy_berat = calculate_entropy('Berat')
+
+# Membulatkan nilai entropi menjadi 3 angka desimal
+entropy_usia = round(entropy_usia, 2)
+entropy_kelamin = round(entropy_kelamin, 2)
+entropy_berat = round(entropy_berat, 2)
+
+print(f"Entropi untuk Usia: {entropy_usia}")
+print(f"Entropi untuk Kelamin: {entropy_kelamin}")
+print(f"Entropi untuk Berat: {entropy_berat}")
+
+# Hitung entropi untuk Berat berdasarkan Usia dan Kelamin
+def calculate_entropy_berat_based_on_usia_kelamin():
+    total_samples = len(df)
+    entropy = 0
+
+    unique_usia = df['Usia'].unique()
+    unique_kelamin = df['Kelamin'].unique()
+
+    for usia_value in unique_usia:
+        for kelamin_value in unique_kelamin:
+            subset = df[(df['Usia'] == usia_value) & (df['Kelamin'] == kelamin_value)]
+            count_yes = subset['Hipertensi'].value_counts().get('ya', 0)
+            count_no = len(subset) - count_yes
+            p_yes = count_yes / len(subset)
+            p_no = count_no / len(subset)
+
+            entropy += len(subset) / total_samples * (-p_yes * math.log2(p_yes) - p_no * math.log2(p_no) if p_yes != 0 and p_no != 0 else 0)
+
+    return entropy
+
+# Hitung entropi untuk Berat berdasarkan Usia dan Kelamin
+entropy_berat_based_on_usia_kelamin = calculate_entropy_berat_based_on_usia_kelamin()
+
+# Membulatkan nilai entropi menjadi 3 angka desimal
+entropy_berat_based_on_usia_kelamin = round(entropy_berat_based_on_usia_kelamin, 2)
+
+print("----------------------------------------------------------------------------------------------------")
+# Catatan untuk hasil entropi Berat berdasarkan Usia dan Kelamin
+print(f"\nCatatan:")
+#print(f"- Entropi untuk Berat berdasarkan Usia dan Kelamin: {entropy_berat_based_on_usia_kelamin}")
+print("- Nilai entropi yang lebih kecil menunjukkan tingkat kepastian yang lebih tinggi.")
+print("- Atribut 'Berat' memberikan informasi yang lebih baik dalam memisahkan data berdasarkan 'Hipertensi'.")
+
+# Hitung entropi untuk Berat berdasarkan Usia dan Kelamin
+entropy_berat_based_on_usia_kelamin = calculate_entropy_berat_based_on_usia_kelamin()
+
+# Membulatkan nilai entropi menjadi 3 angka desimal
+entropy_berat_based_on_usia_kelamin = round(entropy_berat_based_on_usia_kelamin, 2)
+
+print("----------------------------------------------------------------------------------------------------")
+print(f"Entropi untuk Berat berdasarkan Usia dan Kelamin: {entropy_berat_based_on_usia_kelamin}")
+print("----------------------------------------------------------------------------------------------------")
+
+# Rules based on the provided conditions
+def make_decision_rules(row):
+    if row['Berat'] in ["average", "underweight"]:
+        return "tidak terkena hipertensi"
+    elif row['Berat'] == "overweight" and row['Kelamin'] == "wanita":
+        return "terkena hipertensi"
+    elif row['Berat'] == "overweight" and row['Kelamin'] == "pria":
+        return "terkena hipertensi"
+    elif row['Berat'] == "overweight" and row['Kelamin'] == "pria":
+        return "tidak terkena hipertensi"
+
+# Tambahkan kolom hasil keputusan berdasarkan aturan
+df['Keputusan'] = df.apply(make_decision_rules, axis=1)
+
+# Tampilkan DataFrame dengan hasil keputusan
+print("\nDataFrame dengan Kolom Keputusan:")
+print(df[['Nama', 'Usia', 'Berat', 'Kelamin', 'Hipertensi', 'Keputusan']])
